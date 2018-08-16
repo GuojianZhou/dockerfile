@@ -5,9 +5,9 @@ ENV REFRESHED_AT 2018-08-16
 ADD ubuntu-base-16.04.4-base-amd64.tar.gz /
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-ping net-tools \
-    openssh-server vim sudo git python2.7 python-pip libopencv-dev -y 
+    openssh-server vim sudo git python2.7 python-pip unzip -y
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates apt-transport-https gnupg-curl && \
+RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates apt-transport-https gnupg-curl && \
     rm -rf /var/lib/apt/lists/* && \
     NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 ENV CUDA_VERSION 9.2.148
 
 ENV CUDA_PKG_VERSION 9-2=$CUDA_VERSION-1
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt install -y --no-install-recommends \
         cuda-cudart-$CUDA_PKG_VERSION && \
     ln -s cuda-9.2 /usr/local/cuda
 
@@ -40,7 +40,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>=9.2"
 
 ENV NCCL_VERSION 2.2.13
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt install -y --no-install-recommends \
         cuda-libraries-$CUDA_PKG_VERSION \
         cuda-nvtx-$CUDA_PKG_VERSION \
         libnccl2=$NCCL_VERSION-1+cuda9.2 && \
@@ -49,27 +49,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV CUDNN_VERSION 7.2.1.38
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN  apt install -y --no-install-recommends \
             libcudnn7=$CUDNN_VERSION-1+cuda9.2 && \
     apt-mark hold libcudnn7
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essential module-assistant libboost-dev \
     libboost-thread-dev libboost-system-dev libboost-filesystem-dev \
-    libboost-program-options-dev libboost-python-dev libprotobuf-dev \
+    libboost-program-options-dev libboost-python-dev libprotobuf-dev libopencv-dev \
     protobuf-compiler libhdf5-dev liblmdb-dev libsnappy-dev libatlas-dev \
     libatlas-base-dev libncurses5-dev gcc-multilib g++-multilib lib32z1 \
     libgoogle-glog-dev -y
 
-RUN pip install easydict protobuf scipy opencv-python pillow mock numpy
+RUN pip2 install virtualenv easydict protobuf scipy opencv-python pillow mock numpy
 
 # Replace 1000 with your user / group id
-RUN export uid=1001 gid=1001 && \
+RUN export uid=1000 gid=1000 && \
     mkdir -p /home/joe && \
-    echo "joe:x:${uid}:${gid}:Abc,,,:/home/joe:/bin/bash" >> /etc/passwd && \
+    echo "joe:x:${uid}:${gid}:joe,,,:/home/joe:/bin/bash" >> /etc/passwd && \
     echo "joe:x:${uid}:" >> /etc/group && \
     echo "joe ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/joe && \
     chmod 0440 /etc/sudoers.d/joe && \
-    chown ${uid}:${gid} -R /home/joe
+    cp -a /root/.bashrc /home/joe/ && \
+    chown ${uid}:${gid} -R /home/joe && \
+    export "PATH=/home/joe/bin:${PATH}" /home/joe/.bashrc && \
+    chown ${uid}:${gid} -R /home/joe/.bashrc
  
 USER joe
 ENV HOME /home/joe
@@ -87,18 +90,18 @@ RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_MLU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_MLU} && \
     . ${PATH_TFVENV_MLU}/bin/activate && \
-    pip install easydict protobuf scipy opencv-python pillow mock numpy
+    pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_GPU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_GPU} && \
     . ${PATH_TFVENV_GPU}/bin/activate && \
-    pip install easydict protobuf scipy opencv-python pillow mock numpy
+    pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_CPU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_CPU} && \
     . ${PATH_TFVENV_CPU}/bin/activate && \
-    pip install easydict protobuf scipy opencv-python pillow mock numpy
+    pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 CMD /bin/bash

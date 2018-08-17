@@ -1,6 +1,6 @@
 FROM scratch
 MAINTAINER Guojian Zhou "joe_zgj@163.com"
-ENV REFRESHED_AT 2018-08-16
+ENV REFRESHED_AT 2018-08-17
 
 ADD ubuntu-base-16.04.4-base-amd64.tar.gz /
 
@@ -56,7 +56,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-p
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essential module-assistant libboost-dev \
     libboost-thread-dev libboost-system-dev libboost-filesystem-dev \
     libboost-program-options-dev libboost-python-dev libprotobuf-dev libopencv-dev \
-    protobuf-compiler libhdf5-dev liblmdb-dev libsnappy-dev libatlas-dev \
+    protobuf-compiler libhdf5-dev liblmdb-dev libleveldb-dev libsnappy-dev libatlas-dev \
     libatlas-base-dev libncurses5-dev gcc-multilib g++-multilib lib32z1 \
     libgoogle-glog-dev -y
 
@@ -84,8 +84,9 @@ WORKDIR $HOME
 ENV USER joe
 ADD bazel-0.5.4-installer-linux-x86_64.sh /home/${USER}
 ENV PATH_TFVENV_MLU /home/${USER}/TF-v1.4/virtualenv_mlu
-ENV PATH_TFVENV_CPU /home/${USER}/TF-v1.4/virtualenv_cpi
+ENV PATH_TFVENV_CPU /home/${USER}/TF-v1.4/virtualenv_cpu
 ENV PATH_TFVENV_GPU /home/${USER}/TF-v1.4/virtualenv_gpu
+ENV PATH /home/${USER}/bin:$PATH
 
 RUN export USER=joe && \
     mkdir -p /home/${USER}/.pip && \

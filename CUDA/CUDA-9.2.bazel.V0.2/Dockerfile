@@ -40,7 +40,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>=9.2"
 
 ENV NCCL_VERSION 2.2.13
-RUN apt install -y --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
         cuda-libraries-$CUDA_PKG_VERSION \
         cuda-nvtx-$CUDA_PKG_VERSION \
         libnccl2=$NCCL_VERSION-1+cuda9.2 && \
@@ -49,7 +49,7 @@ RUN apt install -y --no-install-recommends \
 ENV CUDNN_VERSION 7.2.1.38
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-RUN  apt install -y --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
             libcudnn7=$CUDNN_VERSION-1+cuda9.2 && \
     apt-mark hold libcudnn7
 
@@ -60,7 +60,10 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essenti
     libatlas-base-dev libncurses5-dev gcc-multilib g++-multilib lib32z1 \
     libgoogle-glog-dev -y
 
-RUN pip2 install virtualenv easydict protobuf scipy opencv-python pillow mock numpy
+RUN mkdir /.py
+ADD py/* /.py/
+RUN pip2 install /.py/*.whl && \
+    pip2 install virtualenv easydict protobuf scipy opencv-python pillow mock numpy
 
 # Replace 1000 with your user / group id
 RUN export uid=1000 gid=1000 && \
@@ -90,18 +93,21 @@ RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_MLU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_MLU} && \
     . ${PATH_TFVENV_MLU}/bin/activate && \
+    pip2 install /.py/*.whl && \
     pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_GPU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_GPU} && \
     . ${PATH_TFVENV_GPU}/bin/activate && \
+    pip2 install /.py/*.whl && \
     pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 RUN export USER=joe && \
     mkdir -p ${PATH_TFVENV_CPU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_CPU} && \
     . ${PATH_TFVENV_CPU}/bin/activate && \
+    pip2 install /.py/*.whl && \
     pip2 install easydict protobuf scipy opencv-python pillow mock numpy
 
 CMD /bin/bash

@@ -33,6 +33,7 @@ case ${DOCKER_IMAGE} in
 		pushd ${TOP_DIR}/CUDA/CUDA-9.2.bazel.V0.2
 		cp ${TOP_DIR}/images/ubuntu-base-16.04.4-base-amd64.tar.gz .
 		cp ${TOP_DIR}/images/bazel-0.5.4-installer-linux-x86_64.sh .
+		cp -a ${TOP_DIR}/images/py .
 		echo "The nv/cuda-9.2_cudnn-7.2_bazel:V0.2 docker image will be created!"
 		docker build -t nv/cuda-9.2_cudnn-7.2_bazel:V0.2 .
 		echo "The nv/cuda-9.2_cudnn-7.2_bazel:V0.2 docker image has be created!"
@@ -41,6 +42,9 @@ case ${DOCKER_IMAGE} in
 		fi
 		if [ -f bazel-0.5.4-installer-linux-x86_64.sh ]; then
 			rm -f bazel-0.5.4-installer-linux-x86_64.sh
+		fi
+		if [ -d py ]; then
+			rm -fr py
 		fi
 		popd
 		;;

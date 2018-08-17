@@ -4,10 +4,7 @@ ENV REFRESHED_AT 2018-08-16
 
 ADD ubuntu-base-16.04.4-base-amd64.tar.gz /
 
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-ping net-tools \
-    openssh-server vim sudo git python2.7 python-pip unzip -y
-
-RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates apt-transport-https gnupg-curl && \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates apt-utils apt-transport-https gnupg-curl && \
     rm -rf /var/lib/apt/lists/* && \
     NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
@@ -20,7 +17,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-cer
 ENV CUDA_VERSION 9.2.148
 
 ENV CUDA_PKG_VERSION 9-2=$CUDA_VERSION-1
-RUN apt update && apt install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
         cuda-cudart-$CUDA_PKG_VERSION && \
     ln -s cuda-9.2 /usr/local/cuda
 
@@ -40,7 +37,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>=9.2"
 
 ENV NCCL_VERSION 2.2.13
-RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthenticated \
         cuda-libraries-$CUDA_PKG_VERSION \
         cuda-nvtx-$CUDA_PKG_VERSION \
         libnccl2=$NCCL_VERSION-1+cuda9.2 && \
@@ -49,9 +46,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
 ENV CUDNN_VERSION 7.2.1.38
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-RUN DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthenticated \
             libcudnn7=$CUDNN_VERSION-1+cuda9.2 && \
     apt-mark hold libcudnn7
+
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-ping net-tools \
+    openssh-server vim sudo git python2.7 python-pip unzip -y
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essential module-assistant libboost-dev \
     libboost-thread-dev libboost-system-dev libboost-filesystem-dev \
@@ -74,7 +74,7 @@ RUN export uid=1000 gid=1000 && \
     chmod 0440 /etc/sudoers.d/joe && \
     cp -a /root/.bashrc /home/joe/ && \
     chown ${uid}:${gid} -R /home/joe && \
-    export "PATH=/home/joe/bin:${PATH}" /home/joe/.bashrc && \
+    export "PATH=/home/joe/bin:${PATH}" && \
     chown ${uid}:${gid} -R /home/joe/.bashrc
  
 USER joe
@@ -86,6 +86,11 @@ ADD bazel-0.5.4-installer-linux-x86_64.sh /home/${USER}
 ENV PATH_TFVENV_MLU /home/${USER}/TF-v1.4/virtualenv_mlu
 ENV PATH_TFVENV_CPU /home/${USER}/TF-v1.4/virtualenv_cpi
 ENV PATH_TFVENV_GPU /home/${USER}/TF-v1.4/virtualenv_gpu
+
+RUN export USER=joe && \
+    mkdir -p /home/${USER}/.pip && \
+    echo "[global]" > /home/${USER}/.pip/pip.conf && \
+    echo "download_cache = /.py" >> /home/${USER}/.pip/pip.conf
 
 RUN export USER=joe && \
     /home/${USER}/bazel-0.5.4-installer-linux-x86_64.sh --user && \

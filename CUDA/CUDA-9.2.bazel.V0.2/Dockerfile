@@ -2,7 +2,7 @@ FROM scratch
 MAINTAINER Guojian Zhou "joe_zgj@163.com"
 ENV REFRESHED_AT 2018-08-17
 
-ADD ubuntu-base-16.04.4-base-amd64.tar.gz /
+ADD ubuntu-base-16.04.5-base-amd64.tar.gz /
 
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates apt-utils apt-transport-https gnupg-curl && \
     rm -rf /var/lib/apt/lists/* && \

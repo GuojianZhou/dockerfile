@@ -1,6 +1,6 @@
 FROM scratch
 MAINTAINER Guojian Zhou "joe_zgj@163.com"
-ENV REFRESHED_AT 2018-08-17
+ENV REFRESHED_AT 2018-08-20
 
 ADD ubuntu-base-16.04.5-base-amd64.tar.gz /
 
@@ -18,7 +18,11 @@ ENV CUDA_VERSION 9.2.148
 
 ENV CUDA_PKG_VERSION 9-2=$CUDA_VERSION-1
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        cuda-cudart-$CUDA_PKG_VERSION && \
+        cuda-cudart-$CUDA_PKG_VERSION cuda-nvcc-$CUDA_PKG_VERSION \
+        cuda-cudart-dev-$CUDA_PKG_VERSION cuda-cufft-dev-$CUDA_PKG_VERSION \
+        cuda-curand-dev-$CUDA_PKG_VERSION cuda-cublas-dev-$CUDA_PKG_VERSION \
+        cuda-cusolver-dev-$CUDA_PKG_VERSION cuda-cusparse-dev-$CUDA_PKG_VERSION \
+        cuda-cupti-$CUDA_PKG_VERSION cuda-command-line-tools-$CUDA_PKG_VERSION && \
     ln -s cuda-9.2 /usr/local/cuda
 
 # nvidia-docker 1.0
@@ -29,7 +33,7 @@ RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
     echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
 
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES all
@@ -40,15 +44,21 @@ ENV NCCL_VERSION 2.2.13
 RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthenticated \
         cuda-libraries-$CUDA_PKG_VERSION \
         cuda-nvtx-$CUDA_PKG_VERSION \
-        libnccl2=$NCCL_VERSION-1+cuda9.2 && \
+        libnccl2=$NCCL_VERSION-1+cuda9.2 \
+        libnccl-dev=$NCCL_VERSION-1+cuda9.2 && \
+        ln -sf /usr/lib/x86_64-linux-gnu/libnccl.so.2 /usr/lib/libnccl.so.2 && \
     apt-mark hold libnccl2
 
 ENV CUDNN_VERSION 7.2.1.38
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthenticated \
-            libcudnn7=$CUDNN_VERSION-1+cuda9.2 && \
-    apt-mark hold libcudnn7
+            libcudnn7=$CUDNN_VERSION-1+cuda9.2 \
+            libcudnn7-dev=$CUDNN_VERSION-1+cuda9.2 && \
+    apt-mark hold libcudnn7 && \
+    cd /usr/local/cuda/lib64 && \
+    ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.7.2.1 . && \
+    ln -sf libcudnn.so.7.2.1 libcudnn.so.7 && cd -
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-ping net-tools \
     openssh-server vim sudo git python2.7 python-pip unzip -y
@@ -58,7 +68,9 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essenti
     libboost-program-options-dev libboost-python-dev libprotobuf-dev libopencv-dev \
     protobuf-compiler libhdf5-dev liblmdb-dev libleveldb-dev libsnappy-dev libatlas-dev \
     libatlas-base-dev libncurses5-dev gcc-multilib g++-multilib lib32z1 \
-    libgoogle-glog-dev -y
+    libgoogle-glog-dev -y && \
+    sudo rm -rf /var/lib/apt/lists/* && \
+    sudo rm -rf /var/cache/apt/archives/*.deb
 
 RUN mkdir /.py
 ADD py/* /.py/
@@ -82,10 +94,10 @@ ENV HOME /home/joe
 WORKDIR $HOME
 
 ENV USER joe
-ADD bazel-0.5.4-installer-linux-x86_64.sh /home/${USER}
-ENV PATH_TFVENV_MLU /home/${USER}/TF-v1.4/virtualenv_mlu
-ENV PATH_TFVENV_CPU /home/${USER}/TF-v1.4/virtualenv_cpu
-ENV PATH_TFVENV_GPU /home/${USER}/TF-v1.4/virtualenv_gpu
+ADD bazel-0.16.0-installer-linux-x86_64.sh /home/${USER}
+ENV PATH_TFVENV_MLU /home/${USER}/TF-v1.10/virtualenv_mlu
+ENV PATH_TFVENV_CPU /home/${USER}/TF-v1.10/virtualenv_cpu
+ENV PATH_TFVENV_GPU /home/${USER}/TF-v1.10/virtualenv_gpu
 ENV PATH /home/${USER}/bin:$PATH
 
 RUN export USER=joe && \
@@ -94,8 +106,8 @@ RUN export USER=joe && \
     echo "download_cache = /.py" >> /home/${USER}/.pip/pip.conf
 
 RUN export USER=joe && \
-    /home/${USER}/bazel-0.5.4-installer-linux-x86_64.sh --user && \
-    rm -f /home/${USER}/bazel-0.5.4-installer-linux-x86_64.sh && \
+    /home/${USER}/bazel-0.16.0-installer-linux-x86_64.sh --user && \
+    rm -f /home/${USER}/bazel-0.16.0-installer-linux-x86_64.sh && \
     mkdir -p ${PATH_TFVENV_MLU} && \
     virtualenv --system-site-packages ${PATH_TFVENV_MLU} && \
     . ${PATH_TFVENV_MLU}/bin/activate && \

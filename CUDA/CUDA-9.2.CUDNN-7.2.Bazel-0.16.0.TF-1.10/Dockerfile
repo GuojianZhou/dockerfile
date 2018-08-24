@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         cuda-curand-dev-$CUDA_PKG_VERSION cuda-cublas-dev-$CUDA_PKG_VERSION \
         cuda-cusolver-dev-$CUDA_PKG_VERSION cuda-cusparse-dev-$CUDA_PKG_VERSION \
         cuda-cupti-$CUDA_PKG_VERSION cuda-command-line-tools-$CUDA_PKG_VERSION && \
+    rm -rf /var/cache/apt/archives/*.deb && \
     ln -s cuda-9.2 /usr/local/cuda && \
     ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
     ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/libcuda.so.1 && \
@@ -50,6 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthe
         libnccl2=$NCCL_VERSION-1+cuda9.2 \
         libnccl-dev=$NCCL_VERSION-1+cuda9.2 && \
         ln -sf /usr/lib/x86_64-linux-gnu/libnccl.so.2 /usr/lib/libnccl.so.2 && \
+    rm -rf /var/cache/apt/archives/*.deb && \
     apt-mark hold libnccl2
 
 ENV CUDNN_VERSION 7.2.1.38
@@ -58,6 +60,7 @@ LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 RUN apt-get update && apt-get install -y --no-install-recommends --allow-unauthenticated \
             libcudnn7=$CUDNN_VERSION-1+cuda9.2 \
             libcudnn7-dev=$CUDNN_VERSION-1+cuda9.2 && \
+    rm -rf /var/cache/apt/archives/*.deb && \
     apt-mark hold libcudnn7 && \
     cd /usr/local/cuda/lib64 && \
     ln -sf /usr/lib/x86_64-linux-gnu/libcudnn.so.7.2.1 . && \

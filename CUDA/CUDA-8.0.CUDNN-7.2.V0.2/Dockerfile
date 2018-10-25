@@ -65,11 +65,11 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install apt-utils iputils-p
     openssh-server vim sudo git python2.7 python-pip unzip -y
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install cmake build-essential module-assistant libboost-dev \
-    libboost-thread-dev libboost-system-dev libboost-filesystem-dev \
+    libboost-thread-dev libboost-system-dev libboost-filesystem-dev libboost-regex-dev \
     libboost-program-options-dev libboost-python-dev libprotobuf-dev libopencv-dev \
     protobuf-compiler libhdf5-dev liblmdb-dev libleveldb-dev libsnappy-dev libatlas-dev \
     libatlas-base-dev libncurses5-dev gcc-multilib g++-multilib lib32z1 \
-    libgoogle-glog-dev -y && \
+    libgoogle-glog-dev libopenblas-dev -y && \
     rm -rf /var/cache/apt/archives/*.deb && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf /var/cache/apt/archives/*.deb && \
